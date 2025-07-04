@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>cutlink</title>
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 50px; direction: rtl; }
+    input, button { padding: 10px; margin: 10px; width: 300px; }
+    #links { margin-top: 30px; }
+    .short-link { background: #f0f0f0; margin: 10px; padding: 10px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>اختصر روابطك</h1>
+  <input type="url" id="longurl" placeholder="أدخل الرابط هنا">
+  <button onclick="shorten()">اختصر</button>
+
+  <div id="links"></div>
+
+  <script>
+    const API_URL = "https://sheetdb.io/api/v1/2pftnscreq3sz"; // ضع رابطك الكامل هنا
+
+    async function shorten() {
+      const longurl = document.getElementById('longurl').value;
+      if (!longurl) {
+        alert("الرجاء إدخال رابط");
+        return;
+  
+
+      const shortCode = Math.random().toString(36).substring(2, 8);
+      const shortUrl = window.location.origin + "/s/" + shortCode;
+
+      // سجل في SheetDB
+      const data = {
+        data: [
+          { long: longurl, short: shortUrl }
+        ]
+      };
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        alert(`تم اختصار الرابط: ${shortUrl}`);
+        loadLinks(); // جدد القائمة
+      } catch (e) {
+        console.error(e);
+        alert("حصل خطأ في حفظ الرابط");
+      }
+    }
+
+    async function loadLinks() {
+      try {
+        const res = await fetch(API_URL);
+        const links = await res.json();
+        const container = document.getElementById("links");
+        container.innerHTML = "";
+        links.forEach(item => {
+          container.innerHTML += `
+            <div class="short-link">
+              <b>الأصلي:</b> ${item.long} <br>
+              <b>القصير:</b> <a href="${item.long}" target="_blank">${item.short}</a>
+            </div>
+          `;
+        });
+      } catch (e) {
+        console.error(e);
+        alert("تعذر تحميل الروابط");
+      }
+    }
+
+    // عند بداية الصفحة
+    loadLinks();
+  </script>
+</body>
+</html>
